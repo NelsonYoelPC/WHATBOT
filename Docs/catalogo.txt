@@ -1,0 +1,480 @@
+CATÁLOGO INMOBILIARIO PARA CHATBOT (2026)
+Inmobiliaria Horizonte Urbano S.A.C.
+Documento diseñado para que un bot responda preguntas basándose únicamente en este catálogo:
+propiedades, precios, características, procesos, requisitos, políticas, términos y preguntas frecuentes.
+Fecha de edición: 2026-03-03
+Uso recomendado
+Cuando el cliente pregunte por propiedades, responder citando el Código de la ficha.
+Si un dato no figura en la ficha (por ejemplo: “metros exactos de patio”), indicar: “No se encuentra en
+el catálogo”.
+Para filtrar, pedir: ciudad/distrito, tipo (casa/depa/terreno/local), presupuesto y número de dormitorios.
+1. Quiénes somos
+Horizonte Urbano S.A.C. es una inmobiliaria orientada a compra, venta y alquiler de inmuebles
+residenciales y comerciales. Operamos principalmente en: Arequipa, Puno, Lima (zonas específicas
+según inventario).
+Misión
+Brindar asesoría inmobiliaria transparente y efectiva, conectando a las familias y empresas con inmuebles
+adecuados a sus necesidades mediante información clara, procesos simples y acompañamiento legal.
+Servicios
+Intermediación: compra/venta/alquiler.
+ 
+Asesoría legal y notarial (minuta, revisión registral, contratos).
+ 
+Tasaciones referenciales y análisis de mercado (según zona).
+ 
+Gestión documentaria: SUNARP, HR/PU, arbitrios (según municipio).
+ 
+Acompañamiento en financiamiento hipotecario con bancos aliados.
+Canales de atención
+WhatsApp: +51 954 321 789 | Correo: ventas@horizonteurbano.pe | Horario: Lun–Sáb 9:00–18:00
+
+2. Cómo leer las fichas de propiedad
+Cada inmueble tiene un Código. Ese código es la referencia única para separar visitas, reservar, negociar
+y preparar contrato.
+ 
+Tipo: Casa / Departamento / Terreno / Local / Oficina.
+ 
+Ubicación: Ciudad – Distrito – Referencia general.
+ 
+Área: área total y/o construida (según ficha).
+ 
+Precio: venta en USD o alquiler mensual en USD.
+ 
+Condiciones: mantenimiento, cochera, amoblado, mascotas, etc.
+Reglas del catálogo
+1) Si un dato no está en la ficha, no debe inventarse. 2) La disponibilidad puede variar; si el cliente quiere
+separar, se confirma por administración.
+
+3. Inventario en Venta — Arequipa
+Propiedades disponibles para venta. Todos los precios están expresados en USD.
+Código
+Tipo
+Distrito
+Área
+Precio
+Dorm.
+Baños
+Cochera
+Características clave
+VA-001
+Casa
+Cerro Colorado
+180 m² (T) / 140 m² (C)
+$145,000
+3
+2
+1
+Patio, sala-comedor, cocina cerrada, lavandería.
+VA-002
+Departamento
+Yanahuara
+95 m² (C)
+$98,000
+2
+2
+1
+Balcón, ascensor, vista parcial, mantenimiento $45.
+VA-003
+Terreno
+Sachaca
+250 m² (T)
+$75,000
+-
+-
+-
+Zona residencial, acceso a agua/luz, parámetros 3 pisos.
+VA-004
+Casa
+Cayma
+220 m² (T) / 175 m² (C)
+$189,000
+4
+3
+2
+Jardín, zona BBQ, cuarto de servicio.
+VA-005
+Departamento
+José L. Bustamante
+78 m² (C)
+$69,500
+3
+2
+0
+Cerca a avenidas principales, sin ascensor (3er piso).
+VA-006
+Local Comercial
+Cercado
+120 m² (C)
+$210,000
+-
+2
+0
+Frente a avenida, licencia municipal sujeta a rubro.
+Notas: (T) = área total, (C) = área construida. Mantenimiento aplica solo en edificios/condominios.
+
+4. Inventario en Venta — Puno y Juliaca
+Propiedades disponibles para venta en Puno y Juliaca. Precios en USD.
+Código
+Tipo
+Ciudad/Distrito
+Área
+Precio
+Dorm.
+Baños
+Cochera
+Características clave
+VP-101
+Casa
+Juliaca (Cercado)
+200 m² (T) / 160 m² (C)
+$120,000
+4
+2
+1
+Jardín frontal, depósito, azotea habilitable.
+VP-102
+Departamento
+Puno (Centro)
+88 m² (C)
+$82,000
+3
+2
+0
+Cerca a comercios, 2do piso, buena iluminación.
+VP-103
+Terreno
+Puno (Salcedo)
+300 m² (T)
+$64,000
+-
+-
+-
+Acceso vehicular, ideal vivienda/unifamiliar.
+VP-104
+Local Comercial
+Juliaca (Mercado)
+95 m² (C)
+$155,000
+-
+1
+0
+Alto tránsito peatonal, 1 nivel, fachada 5 m.
+VP-105
+Casa
+Puno (Huáscar)
+160 m² (T) / 130 m² (C)
+$98,000
+3
+2
+0
+Zona tranquila, ampliación posible.
+
+5. Inventario en Venta — Lima
+Propiedades disponibles para venta en Lima. Precios en USD.
+Código
+Tipo
+Distrito
+Área
+Precio
+Dorm.
+Baños
+Cochera
+Características clave
+VL-201
+Departamento
+Jesús María
+80 m² (C)
+$110,000
+3
+2
+1
+Cerca a parques, edificio con vigilancia.
+VL-202
+Departamento
+Pueblo Libre
+72 m² (C)
+$99,000
+2
+2
+1
+Cocina americana, área común.
+VL-203
+Oficina
+San Isidro
+55 m² (C)
+$135,000
+-
+1
+1
+Centro empresarial, recepción, sala de reuniones.
+VL-204
+Casa
+Los Olivos
+140 m² (T) / 120 m² (C)
+$128,000
+4
+3
+1
+3 niveles, cerca a avenidas.
+
+
+===== PÁGINA 7 =====
+6. Inventario en Alquiler — Residencial
+Propiedades disponibles para alquiler. Precios en USD por mes.
+Código
+Tipo
+Ciudad/Distrito
+Área
+Precio/mes
+Dorm.
+Baños
+Amoblado
+Condiciones
+AR-301
+Departamento
+Arequipa (Cayma)
+70 m²
+$450
+2
+2
+Sí
+1x1 (mes adelanto + garantía). Mascotas: consultar.
+AR-302
+Casa
+Arequipa (Paucarpata)
+160 m²
+$700
+3
+2
+No
+Contrato mínimo 12 meses. Jardín posterior.
+AR-303
+Departamento
+Lima (Miraflores)
+85 m²
+$950
+2
+2
+No
+Edificio con ascensor. Mantenimiento $80.
+AR-304
+Mini-depa
+Juliaca (Cercado)
+35 m²
+$220
+1
+1
+No
+Incluye agua. Luz según medidor.
+
+
+===== PÁGINA 8 =====
+7. Inventario en Alquiler — Comercial
+Locales y oficinas en alquiler. Precios en USD por mes.
+Código
+Tipo
+Ciudad/Zona
+Área
+Precio/mes
+Baños
+Condiciones
+Notas
+AC-401
+Local Comercial
+Juliaca (Centro)
+90 m²
+$600
+1
+2x1 (2 meses garantía + 1 adelanto)
+Zona comercial estratégica. Licencia según rubro.
+AC-402
+Oficina
+Arequipa (Cercado)
+45 m²
+$380
+1
+1x1
+Edificio empresarial, recepción compartida.
+AC-403
+Local Comercial
+Arequipa (Cayma)
+60 m²
+$520
+1
+2x1
+Frente a avenida. Ideal minimarket/servicios.
+
+8. Procesos inmobiliarios
+8.1 Proceso de compra (cliente comprador)
+ 
+Paso 1: Elegir propiedad por código y solicitar visita.
+ 
+Paso 2: Validar presupuesto (contado o crédito).
+ 
+Paso 3: Separación: depósito de reserva (monto según negociación) y firma de constancia.
+ 
+Paso 4: Revisión documentaria: partida registral, cargas/gravámenes, HR/PU si aplica.
+ 
+Paso 5: Minuta + firma notarial + elevación a escritura pública + inscripción en SUNARP.
+8.2 Proceso de venta (propietario vendedor)
+ 
+Recolección de documentos: DNI, partida registral, recibos, HR/PU, etc.
+ 
+Toma de fotos, descripción y publicación con código.
+ 
+Filtrado de interesados y coordinación de visitas.
+ 
+Negociación, separación y cierre con notaría.
+8.3 Proceso de alquiler (arrendador/arrendatario)
+ 
+Evaluación del inquilino: identidad, sustento, referencias (según propietario).
+ 
+Contrato de arrendamiento: plazo, penalidades, inventario (si amoblado).
+ 
+Pago inicial: garantía + adelanto (según condiciones de la ficha).
+ 
+Entrega de llaves y acta de entrega/recepción.
+
+
+===== PÁGINA 10 =====
+9. Financiamiento hipotecario (referencial)
+Trabajamos con bancos aliados para orientar al cliente en créditos hipotecarios. Las condiciones finales
+dependen de evaluación crediticia del banco.
+Condiciones referenciales
+ 
+Financiamiento: hasta 90% del valor del inmueble (según banco).
+ 
+Plazo: hasta 25 años.
+ 
+Tasa referencial: desde 8.5% anual (variable según perfil).
+ 
+Cuota inicial: desde 10% (según banco y producto).
+Requisitos típicos
+ 
+DNI / CE vigente.
+ 
+Sustento de ingresos (boletas, recibos por honorarios, estados de cuenta).
+ 
+Historial crediticio.
+ 
+Documentación del inmueble (partida registral, tasación si aplica).
+Ejemplo de simulación (referencial)
+Precio
+Inicial (10%)
+Monto a financiar
+Plazo
+Tasa
+Cuota aprox.
+$110,000
+$11,000
+$99,000
+20 años
+9.5% anual
+$923 / mes (aprox.)
+La cuota es referencial: no incluye seguros, comisiones ni variaciones de tasa.
+
+
+===== PÁGINA 11 =====
+10. Documentos frecuentes por operación
+10.1 Para venta de inmueble (propietario)
+ 
+DNI de propietarios.
+ 
+Partida registral actualizada (SUNARP).
+ 
+Recibos de servicios (agua/luz) para verificación de dirección.
+ 
+HR/PU (según municipio) y no adeudo de arbitrios (si aplica).
+ 
+Si es sucesión: declaratoria de herederos / testamento inscrito (si aplica).
+10.2 Para compra (comprador)
+ 
+DNI / CE.
+ 
+Medio de pago: transferencia, cheque de gerencia o crédito hipotecario.
+ 
+Si compra con banco: documentos adicionales solicitados por la entidad.
+10.3 Para alquiler (inquilino)
+ 
+DNI / CE.
+ 
+Sustento de ingresos (boletas/recibos/estados de cuenta).
+ 
+Referencia laboral o comercial (según propietario).
+
+
+===== PÁGINA 12 =====
+11. Políticas (resumen para atención al cliente)
+11.1 Visitas
+Las visitas se coordinan con mínimo 24 horas de anticipación. Se solicita nombre completo y DNI para
+registro de ingreso (según condominio/edificio).
+11.2 Reserva / Separación
+La reserva se valida con depósito y confirmación escrita. El monto y el tiempo de vigencia dependen de la
+negociación y disponibilidad.
+11.3 Datos personales
+La información del cliente se usa solo para contacto y coordinación de visitas/operaciones. No se
+comparte con terceros sin autorización, salvo exigencia legal.
+
+
+===== PÁGINA 13 =====
+12. Preguntas frecuentes (FAQ) para el bot
+¿Tienen algo barato?
+Indicar que el catálogo maneja propiedades por código y pedir: ciudad/distrito, tipo y presupuesto máximo.
+¿Cuántos m² tiene la casa X?
+Responder solo si la ficha incluye área total/construida; si no: “No se encuentra en el catálogo”.
+¿Aceptan mascotas en alquiler?
+Responder según la columna/condiciones de la ficha; si no figura: “Consultar”.
+¿Cuál es la dirección exacta?
+El catálogo maneja referencias generales por seguridad. La dirección exacta se brinda al coordinar visita.
+¿Se puede financiar?
+Sí, hay orientación referencial; la aprobación depende del banco y perfil del cliente.
+¿Cuánto se paga de garantía?
+Responder según condiciones de la ficha (1x1, 2x1, etc.).
+¿Incluye cochera?
+Responder según ficha (sí/no/1/2).
+¿Está disponible hoy?
+La disponibilidad puede variar; ofrecer confirmar con administración y pedir código.
+
+
+13. Glosario inmobiliario (términos clave)
+Término
+Definición
+Área total (T)
+Superficie del terreno o la unidad según corresponda.
+Área construida (C)
+Metros cuadrados de construcción techada.
+Partida registral
+Registro oficial del inmueble en SUNARP.
+Gravamen / Carga
+Hipoteca, embargo u otra afectación registrada.
+Minuta
+Documento previo a la escritura pública, firmado por las partes.
+Escritura pública
+Documento notarial que formaliza la compra-venta/alquiler (según acto).
+Arbitrios
+Tributos municipales por limpieza, parques, serenazgo, etc.
+Mantenimiento
+Cuota del edificio/condominio por seguridad, limpieza y áreas comunes.
+1x1 / 2x1
+Forma de pago inicial en alquiler: (adelanto x garantía).
+
+14. Plantillas de respuesta (texto listo)
+Plantilla: pedir datos mínimos
+Para ayudarte mejor, indícame: ciudad/distrito, tipo de inmueble (casa/depa/terreno/local),
+presupuesto y número de dormitorios (si aplica).
+Plantilla: dato fuera del catálogo
+Gracias por tu consulta. No encuentro ese dato en el catálogo. Si me indicas ciudad/distrito y tipo de
+inmueble, te muestro opciones disponibles.
+Plantilla: ofrecer visita
+Puedo coordinar una visita. Confírmame el código del inmueble y tu disponibilidad (día y hora).
+Plantilla: disponibilidad
+La disponibilidad puede variar. Si me confirmas el código, verifico el estado (disponible/reservado).
+
+
+15. Contacto y oficinas
+Oficina Principal (Arequipa): Av. Ejército 1234, Arequipa.
+Teléfono/WhatsApp: +51 954 321 789
+Correo: ventas@horizonteurbano.pe
+Horario: Lunes a Sábado de 9:00 a 18:00
+Si el cliente solicita “dirección exacta”, indicar que se brinda al coordinar visita por seguridad y control de
+acceso.
