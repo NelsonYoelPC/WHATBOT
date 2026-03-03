@@ -1,0 +1,42 @@
+{
+    "info": "EVENT_RECEIVED",
+    "payload": {
+        "object": "whatsapp_business_account",
+        "entry": [
+            {
+                "id": "4365505593668145",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "metadata": {
+                                "display_phone_number": "15551496106",
+                                "phone_number_id": "1009924102202593"
+                            },
+                            "contacts": [
+                                {
+                                    "profile": {
+                                        "name": "N"
+                                    },
+                                    "wa_id": "51942387582"
+                                }
+                            ],
+                            "messages": [
+                                {
+                                    "from": "51942387582",
+                                    "id": "wamid.HBgLNTE5NDIzODc1ODIVAgASGBYzRUIwRjdFODlFNDYxNjVBRkM4NTc2AA==",
+                                    "timestamp": "1772542063",
+                                    "text": {
+                                        "body": "hola 1"
+                                    },
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "field": "messages"
+                    }
+                ]
+            }
+        ]
+    }
+}

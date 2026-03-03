@@ -62,22 +62,29 @@ def verificar_token(req):
         "error": "Token de verificación no válido",
         "token_recibido": token
     })
-    return jsonify({'error': 'Token de verificación no válido'}), 403
+    return jsonify({'error': 'Token de verificacion no válido'}), 403
 
 def recibir_mensaje(req):
     try:
         data = req.get_json(silent=True)
+
         if data is None:
-            # JSON vacío o inválido: registrar como error
             agregar_mensaje_log("Error: Body no es JSON válido o está vacío.")
             return jsonify({'error': 'Invalid JSON'}), 400
-        #TEMPORAL (para prueba): registrar que llegó un evento
-        agregar_mensaje_log({"info": "EVENT_RECEIVED", "payload": data})
-        # Aquí NO guardamos nada si todo salió bien (solo errores)
+
+        # Validar que realmente venga un mensaje
+        if "entry" in data:
+            entry = data["entry"][0]
+            change = entry["changes"][0]
+            value = change["value"]
+
+            if "messages" in value:
+                mensaje = value["messages"][0]["text"]["body"]
+                agregar_mensaje_log(mensaje)
+
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
     except Exception as e:
-        # Registrar SOLO el error real con traceback
         detalle = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         agregar_mensaje_log(detalle)
         return jsonify({'error': 'Internal Server Error'}), 500
