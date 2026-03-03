@@ -79,7 +79,7 @@ def recibir_mensaje(req):
         # A veces Meta manda eventos sin "messages" (por ejemplo statuses)
         mensaje = value.get("messages", [])
 
-        #Si NO hay mensajes, no guardamos nada (no es error)
+        # ✅ Si NO hay mensajes, no guardamos nada (no es error)
         if not mensaje:
             return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -96,8 +96,14 @@ def recibir_mensaje(req):
             texto = (messages.get("text") or {}).get("body", "")
             numero = messages.get("from", "")
 
+            # Guardar en la BD (como texto)
+            agregar_mensaje_log(json.dumps({
+                "numero": numero,
+                "tipo": tipo,
+                "texto": texto
+            }, ensure_ascii=False))
+            # Enviar respuesta (función placeholder)
             enviar_mensajes(texto, numero)
-
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
     except Exception as e:
@@ -134,7 +140,7 @@ def enviar_mensajes(texto, numero):
     #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer EAARxR0W4Q4IBQ2dDSXDdU0Ts57jmQeKAylRvZA0hXzUdRZBYo3A6D836NGwVbVU7ZBZAvADDPJGpRycGRZCjeKEKV3Jst6HPOxU8nP9OYqkPBEnoMQ4SLBsZA5Lx55K1ZCUHhZAKKkZBxZAUWcEc66qFdiwkJs5faWE6oSiPWuAowZA9coqxu893PqZAUrwFfZC65bPjJ44ZBZAXG2TZBtDXy8wGYNMjZAZAO5YGY1FlEZA00G6LPVtBZCS1aMMWgES1uZARuu4UIHMRhjuDsMbmuf2Xcd3y9UehZAw0yZAPgZDZD'  # Reemplaza con tu token de acceso
+        'Authorization': 'Bearer EAARxR0W4Q4IBQ32ZCnBj95xd4D69gyVTlQgaksKCbR3TPjTHCGgxAZALHN6ZC1HqH4jmHnrIpLIGPWmm87owDjzGSBUZC9YohdSwn9V8eMv4PVYLpi2J2Sya4TVqFiQDQguJ9zyYGM11PDZAPdscvR9eIy3LZA2LjrhlsK8F3eMsUWcGjBqlbFloJtoDRFYWpB6ktQHMaBZCGoKZBaZAfFv0SxlnXpI8mdVqLxzK0LGaqZBvGaK5Bdxh5jADgsWeKZAX70EwxJEKc2OXERuv7heRtmAYZC8I'  # Reemplaza con tu token de acceso
     }
     connection = http.client.HTTPSConnection('graph.facebook.com')
     try:
