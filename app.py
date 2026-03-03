@@ -75,7 +75,7 @@ def recibir_mensaje(req):
         change = entry["changes"][0]
         value = change["value"]
         mensaje = value["messages"]
-        if not mensaje:
+        if mensaje:
             messages= mensaje[0]
             if "type" in messages:
                 tipo = messages["type"]
