@@ -67,7 +67,7 @@ def enviar_mensajes(texto, numero, agregar_mensaje_log):
 
     headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer EAARxR0W4Q4IBQ4X0S8DfieZCQd2ftnZB4jZAo8cU2pfScGeccjZBEwQ072YfqNfyN9SYKTZB78snbHxpDSZCVQ6qk8rZATBG9ZBhIZCekFZC6CFdzVLPHPvpQfbiCsZAX8nYYYV19HhlhRiMgi7gME0JcIuEAzcZBww84PNA1tnFDkxgJVwltMZBlnvO0DNvzaBB5mC4kZB2d9n6AjvqQ50P8DQnzYqNvZCiZAMfdiDrlAOMQZAcNMo47ZBdk5fZAtgeR7NAcvRaTaVOIrNDiDaTJZCkokcKztj8jW5P'
+        'Authorization': 'Bearer EAARxR0W4Q4IBQZBZBxL8ZCb2G4JTOdYT07nL4tf9LpSqVtAtuOUfXQZAABNxVqJ3t9CGJ8NwUtZAANpZBTGgLCKNZB1ItV1sbBzx8rSpWBq7AVvZCcxa1kAupA0FrYKuHS0rKwbvxDScxkM1x83Qyzbnx0NgwMTchhBqLdUhLDh362q7qiyVrzkxGhfsLnoFEJBZBkDa4VGTFDs357RVciLZBa864ARiXYrmCqBd5WxgJnIKpomzr92fZA5XDG6Kvui6Qahp2BpjwRZCGtLbQnUej0Ru7ZA8ouQZDZD'
     }
 
     connection = http.client.HTTPSConnection('graph.facebook.com')
