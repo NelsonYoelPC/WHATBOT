@@ -71,8 +71,9 @@ def recibir_mensaje(req):
             # JSON vacío o inválido: registrar como error
             agregar_mensaje_log("Error: Body no es JSON válido o está vacío.")
             return jsonify({'error': 'Invalid JSON'}), 400
-
-        # ✅ Aquí NO guardamos nada si todo salió bien (solo errores)
+        #TEMPORAL (para prueba): registrar que llegó un evento
+        agregar_mensaje_log({"info": "EVENT_RECEIVED", "payload": data})
+        # Aquí NO guardamos nada si todo salió bien (solo errores)
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
     except Exception as e:
