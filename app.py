@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import json
 import traceback
-
+import http.client
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///whatbot.db'
@@ -71,23 +71,37 @@ def recibir_mensaje(req):
         if data is None:
             agregar_mensaje_log("Error: Body no es JSON válido o está vacío.")
             return jsonify({'error': 'Invalid JSON'}), 400
+
         entry = data["entry"][0]
         change = entry["changes"][0]
         value = change["value"]
-        mensaje = value["messages"]
-        if mensaje:
-            messages= mensaje[0]
-            if "type" in messages:
-                tipo = messages["type"]
-                if tipo=="interactive":
-                    return 0
-                if tipo=="text":
-                    texto = messages["text"]["body"]
-                    numero = messages["from"]
-                    agregar_mensaje_log(json.dumps({
-                        "numero": numero,
-                        "texto": texto
-                    }, ensure_ascii=False))
+
+        # A veces Meta manda eventos sin "messages" (por ejemplo statuses)
+        mensaje = value.get("messages", [])
+
+        # ✅ Si NO hay mensajes, no guardamos nada (no es error)
+        if not mensaje:
+            return jsonify({'message': 'EVENT_RECEIVED'}), 200
+
+        messages = mensaje[0]
+
+        # Validación de tipo
+        tipo = messages.get("type")
+
+        if tipo == "interactive":
+            # si no quieres guardar interactivos, solo confirma recepción
+            return jsonify({'message': 'EVENT_RECEIVED'}), 200
+
+        if tipo == "text":
+            texto = (messages.get("text") or {}).get("body", "")
+            numero = messages.get("from", "")
+
+            # Guardar en la BD (como texto)
+            agregar_mensaje_log(json.dumps({
+                "numero": numero,
+                "tipo": tipo,
+                "texto": texto
+            }, ensure_ascii=False))
 
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -95,7 +109,52 @@ def recibir_mensaje(req):
         detalle = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         agregar_mensaje_log(detalle)
         return jsonify({'error': 'Internal Server Error'}), 500
-
+#Enviar mensajes a través de la API de WhatsApp (función placeholder)    
+def enviar_mensajes(texto, numero):
+    texto=texto.lower()
+    if "hola" in texto:
+        data={
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": numero    ,
+            "type": "text",
+            "text": {
+                "preview_url": False,
+                "body": "Hola, ¿en qué puedo ayudarte?"
+            }
+        }
+    else:
+        data={
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": numero    ,
+            "type": "text",
+            "text": {
+                "preview_url": False,
+                "body": "Intente nuevamente, no entendí su mensaje."
+            }
+        }
+    #Convertir el diccionario a JSON 
+    data= json.dumps(data, ensure_ascii=False)
+    #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer EAARxR0W4Q4IBQ2dDSXDdU0Ts57jmQeKAylRvZA0hXzUdRZBYo3A6D836NGwVbVU7ZBZAvADDPJGpRycGRZCjeKEKV3Jst6HPOxU8nP9OYqkPBEnoMQ4SLBsZA5Lx55K1ZCUHhZAKKkZBxZAUWcEc66qFdiwkJs5faWE6oSiPWuAowZA9coqxu893PqZAUrwFfZC65bPjJ44ZBZAXG2TZBtDXy8wGYNMjZAZAO5YGY1FlEZA00G6LPVtBZCS1aMMWgES1uZARuu4UIHMRhjuDsMbmuf2Xcd3y9UehZAw0yZAPgZDZD'  # Reemplaza con tu token de acceso
+    }
+    connection = http.client.HTTPSConnection('graph.facebook.com')
+    try:
+        connection.request('POST', '/v22.0/1009924102202593/messages', body=data, headers=headers)
+        response = connection.getresponse()
+        print(response.status, response.reason)
+        print(response.read().decode())
+    except Exception as e:
+        agregar_mensaje_log(json.dumps({
+            "error": "Error al enviar mensaje",
+            "detalle": str(e)
+        }, ensure_ascii=False))
+    finally:
+        connection.close()
+    
 if __name__ == '__main__':
     # Para Render luego cámbialo a PORT dinámico, pero lo dejo igual a tu estilo actual:
     app.run(host='0.0.0.0', port=80, debug=True)
