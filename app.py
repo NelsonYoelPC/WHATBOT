@@ -71,16 +71,23 @@ def recibir_mensaje(req):
         if data is None:
             agregar_mensaje_log("Error: Body no es JSON válido o está vacío.")
             return jsonify({'error': 'Invalid JSON'}), 400
-
-        # Validar que realmente venga un mensaje
-        if "entry" in data:
-            entry = data["entry"][0]
-            change = entry["changes"][0]
-            value = change["value"]
-
-            if "messages" in value:
-                mensaje = value["messages"][0]["text"]["body"]
-                agregar_mensaje_log(mensaje)
+        entry = data["entry"][0]
+        change = entry["changes"][0]
+        value = change["value"]
+        mensaje = value["messages"]
+        if not mensaje:
+            messages= mensaje[0]
+            if "type" in messages:
+                tipo = messages["type"]
+                if tipo=="interactive":
+                    return 0
+                if tipo=="text":
+                    texto = messages["text"]["body"]
+                    numero = messages["from"]
+                    agregar_mensaje_log(json.dumps({
+                        "numero": numero,
+                        "texto": texto
+                    }, ensure_ascii=False))
 
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
