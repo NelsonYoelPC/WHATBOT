@@ -5,6 +5,7 @@ import json
 import traceback
 import http.client
 import os
+from pypdf import PdfReader
 from openai import OpenAI
 
 app = Flask(__name__)
@@ -32,6 +33,7 @@ with app.app_context():
     db.create_all()
 
 
+# Función para ordenar los registros de la tabla log por fecha y hora de forma descendente
 def obtener_logs_ordenados():
     return Log.query.order_by(Log.fech_y_hora.desc()).all()
 
@@ -42,7 +44,9 @@ def index():
     return render_template('index.html', logs=logs)
 
 
+# Función para agregar un nuevo mensaje y guardarlo en la base de datos
 def agregar_mensaje_log(texto):
+    # Asegura que lo que guardas en texto sea string
     if not isinstance(texto, str):
         texto = json.dumps(texto, ensure_ascii=False)
 
@@ -54,6 +58,8 @@ def agregar_mensaje_log(texto):
 # =========================
 # Webhook WhatsApp (Meta)
 # =========================
+
+# TOKEN DE VERIFICACION DE WHATBOT
 TOKEN_WHATBOT = 'whatbot_verify_2026'
 
 
@@ -72,12 +78,12 @@ def verificar_token(req):
     if token == TOKEN_WHATBOT:
         return challenge, 200
 
+    # Registrar SOLO el error (token inválido)
     agregar_mensaje_log({
         "error": "Token de verificación no válido",
         "token_recibido": token
     })
     return jsonify({'error': 'Token de verificacion no válido'}), 403
-
 
 def recibir_mensaje(req):
     try:
@@ -87,12 +93,14 @@ def recibir_mensaje(req):
             agregar_mensaje_log("Error: Body no es JSON válido o está vacío.")
             return jsonify({'error': 'Invalid JSON'}), 400
 
-        entry = data["entry"][0]
-        change = entry["changes"][0]
-        value = change["value"]
+        entry = (data.get("entry") or [{}])[0]
+        change = (entry.get("changes") or [{}])[0]
+        value = (change.get("value") or {})
 
+        # A veces Meta manda eventos sin "messages" (por ejemplo statuses)
         mensaje = value.get("messages", [])
 
+        # Si NO hay mensajes, no guardamos nada (no es error)
         if not mensaje:
             return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -112,7 +120,7 @@ def recibir_mensaje(req):
                 "texto": texto
             }, ensure_ascii=False))
 
-            respuesta = generar_respuesta_desde_txt(texto)
+            respuesta = generar_respuesta_desde_pdf(texto)
             enviar_mensajes(respuesta, numero)
 
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
@@ -124,71 +132,71 @@ def recibir_mensaje(req):
 
 
 # =========================
-# OpenAI + TXT
+# OpenAI + PDF
 # =========================
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-TXT_PATH = os.environ.get("TXT_PATH", "Docs/catalogo.txt")
+PDF_PATH = os.environ.get("PDF_PATH", "Docs/catalogo.pdf")
 CHAT_MODEL = os.environ.get("CHAT_MODEL", "gpt-4o-mini")
 
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-_txt_text_cache = None
+_pdf_text_cache = None
 
+def cargar_texto_pdf():
+    global _pdf_text_cache
+    if _pdf_text_cache is not None:
+        return _pdf_text_cache
 
-def cargar_texto_txt():
-    global _txt_text_cache
-    if _txt_text_cache is not None:
-        return _txt_text_cache
+    if not os.path.exists(PDF_PATH):
+        agregar_mensaje_log(f"ERROR: No existe el PDF en la ruta: {PDF_PATH}")
+        _pdf_text_cache = ""
+        return _pdf_text_cache
 
-    if not os.path.exists(TXT_PATH):
-        agregar_mensaje_log(f"ERROR: No existe el TXT en la ruta: {TXT_PATH}")
-        _txt_text_cache = ""
-        return _txt_text_cache
+    reader = PdfReader(PDF_PATH)
+    parts = []
+    for i, page in enumerate(reader.pages):
+        t = (page.extract_text() or "").strip()
+        if t:
+            parts.append(f"[Página {i+1}]\n{t}")
 
-    with open(TXT_PATH, "r", encoding="utf-8") as f:
-        _txt_text_cache = f.read()
+    _pdf_text_cache = "\n\n".join(parts)
+    return _pdf_text_cache
 
-    return _txt_text_cache
-
-
-def buscar_fragmentos_txt(txt_text: str, pregunta: str, max_chars: int = 4500):
+def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500):
     """
-    Búsqueda simple pero más efectiva para TXT:
-    - Parte por bloques (páginas) usando '===== PÁGINA'
-    - Si encuentra keywords en un bloque, devuelve el bloque completo
+    Búsqueda simple: toma palabras clave y recupera líneas que las contengan.
     """
     q = (pregunta or "").lower()
-    palabras = [p for p in q.replace("¿", " ").replace("?", " ").split() if len(p) >= 3]
+    palabras = [p for p in q.replace("¿", " ").replace("?", " ").split() if len(p) >= 4]
 
-    bloques = txt_text.split("===== PÁGINA")
+    lineas = [ln.strip() for ln in pdf_text.splitlines() if ln.strip()]
     encontrados = []
 
-    for i, b in enumerate(bloques):
-        bloque = b.strip()
-        if not bloque:
-            continue
+    for ln in lineas:
+        lnl = ln.lower()
+        if any(p in lnl for p in palabras):
+            encontrados.append(ln)
 
-        bl = bloque.lower()
-        if any(p in bl for p in palabras):
-            encontrados.append("===== PÁGINA" + bloque)
-
-    texto = "\n\n".join(encontrados).strip()
+    # Reduce tamaño (para no pasar demasiado al modelo)
+    texto = "\n".join(encontrados)
     if len(texto) > max_chars:
         texto = texto[:max_chars] + "\n...[recortado]..."
     return texto
 
 
-def generar_respuesta_desde_txt(texto_usuario: str) -> str:
+def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
     t = (texto_usuario or "").strip()
 
+    # Saludo natural (sin depender del PDF)
     if t.lower() in ["hola", "buenas", "buenos dias", "buenas tardes", "buenas noches"]:
         return "Hola, bienvenido(a) a nuestra inmobiliaria. ¿Deseas comprar, vender o alquilar una propiedad?"
 
-    txt_text = cargar_texto_txt()
-    if not txt_text:
+    pdf_text = cargar_texto_pdf()
+    if not pdf_text:
         return "No pude leer el catálogo en este momento. Intenta nuevamente en unos minutos."
 
-    evidencia = buscar_fragmentos_txt(txt_text, t)
+    evidencia = buscar_fragmentos(pdf_text, t)
 
+    # Si no hay evidencia → no inventar
     if not evidencia.strip():
         return "Gracias por tu consulta. No encuentro ese dato en el catálogo. ¿En qué ciudad/distrito y qué tipo de inmueble buscas?"
 
@@ -201,7 +209,7 @@ def generar_respuesta_desde_txt(texto_usuario: str) -> str:
         "Si la pregunta está fuera del catálogo, indica que solo brindas información del catálogo y pide datos para ayudar."
     )
 
-    user = f"Pregunta del cliente: {t}\n\nEvidencia del catálogo (TXT):\n{evidencia}"
+    user = f"Pregunta del cliente: {t}\n\nEvidencia del catálogo (PDF):\n{evidencia}"
 
     resp = client.chat.completions.create(
         model=CHAT_MODEL,
@@ -230,11 +238,13 @@ def enviar_mensajes(texto, numero):
         }
     }
 
+    # Convertir el diccionario a JSON y codificar en UTF-8
     data = json.dumps(data, ensure_ascii=False).encode("utf-8")
 
+    # Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
     headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer EAARxR0W4Q4IBQ4X0S8DfieZCQd2ftnZB4jZAo8cU2pfScGeccjZBEwQ072YfqNfyN9SYKTZB78snbHxpDSZCVQ6qk8rZATBG9ZBhIZCekFZC6CFdzVLPHPvpQfbiCsZAX8nYYYV19HhlhRiMgi7gME0JcIuEAzcZBww84PNA1tnFDkxgJVwltMZBlnvO0DNvzaBB5mC4kZB2d9n6AjvqQ50P8DQnzYqNvZCiZAMfdiDrlAOMQZAcNMo47ZBdk5fZAtgeR7NAcvRaTaVOIrNDiDaTJZCkokcKztj8jW5P'
+        'Authorization': 'Bearer EAARxR0W4Q4IBQzirE3XmNuZAOoszfOhZB8gpiMZBWRtbgLZA0UZBZBYwvrNewzn87197kZCA6xRnsctkans2idzocdekf2UL02z5QN0MbDqZCNWczaSUUnNIgdqWgfSUkJTprlYqwmLP1RKpcwZAEt4gPPwcyxJmKyBQrwIsvsY6PgLAf6Lu2SU2rykh5GBaMCNAcYcFMaS7kFZBvNY65dTeC220F8FkqC3uqheXvK09LpH3ZAQV1tZBPc17hG6ZCLwBBJYkCMWt0QRZCTn29WbcZBROWQQhmi3'
     }
 
     connection = http.client.HTTPSConnection('graph.facebook.com')
