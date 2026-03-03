@@ -7,7 +7,10 @@ import http.client
 import os
 from pypdf import PdfReader
 from openai import OpenAI
-from whatsapp_service import enviar_mensajes
+##from whatsapp_service import enviar_mensajes
+import re
+import unicodedata
+from typing import List, Tuple
 app = Flask(__name__)
 
 # =========================
@@ -120,8 +123,8 @@ def recibir_mensaje(req):
                 "texto": texto
             }, ensure_ascii=False))
 
-            ##respuesta = generar_respuesta_desde_pdf(texto)
-            enviar_mensajes(texto, numero, agregar_mensaje_log)
+            respuesta = generar_respuesta_desde_pdf(texto)            
+            enviar_mensajes(respuesta, numero, agregar_mensaje_log)
 
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -161,33 +164,209 @@ def cargar_texto_pdf():
     _pdf_text_cache = "\n\n".join(parts)
     return _pdf_text_cache
 
-def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500):
+CODE_RE = re.compile(r"\b(?:VA|VP|VL|AR|AC)-\d{3}\b", re.IGNORECASE)
+
+
+def normalizar_texto(texto: str) -> str:
+    """Minúsculas, sin tildes, sin signos raros, espacios limpios."""
+    if not texto:
+        return ""
+    texto = texto.lower()
+    texto = unicodedata.normalize("NFD", texto)
+    texto = "".join(c for c in texto if unicodedata.category(c) != "Mn")
+    texto = re.sub(r"[^\w\s$/.%-]", " ", texto)  # deja $ y algunos separadores útiles
+    texto = re.sub(r"\s+", " ", texto).strip()
+    return texto
+
+
+def expandir_sinonimos(palabras: List[str]) -> List[str]:
     """
-    Búsqueda simple: toma palabras clave y recupera líneas que las contengan.
+    Sinónimos típicos (chat inmobiliario). Ajusta si quieres.
     """
-    q = (pregunta or "").lower()
-    palabras = [p for p in q.replace("¿", " ").replace("?", " ").split() if len(p) >= 4]
+    mapa = {
+        "depa": ["departamento", "dpto"],
+        "dpto": ["departamento", "depa"],
+        "depto": ["departamento"],
+        "casa": ["vivienda"],
+        "hab": ["dorm", "dormitorios", "habitaciones"],
+        "dorm": ["dormitorios", "hab", "habitaciones"],
+        "baño": ["banos", "sshh"],
+        "banos": ["baño", "sshh"],
+        "cochera": ["estacionamiento", "garage"],
+        "garage": ["cochera", "estacionamiento"],
+        "alquiler": ["renta", "arrendar", "alquilar"],
+        "alquilar": ["alquiler", "renta"],
+        "comprar": ["compra", "venta"],
+        "venta": ["comprar", "compra"],
+        "barato": ["economico", "oferta", "bajo"],
+        "economico": ["barato", "oferta", "bajo"],
+    }
 
-    lineas = [ln.strip() for ln in pdf_text.splitlines() if ln.strip()]
-    encontrados = []
+    out = set(palabras)
+    for p in list(palabras):
+        for s in mapa.get(p, []):
+            out.add(s)
+    return list(out)
 
-    for ln in lineas:
-        lnl = ln.lower()
-        if any(p in lnl for p in palabras):
-            encontrados.append(ln)
 
-    # Reduce tamaño (para no pasar demasiado al modelo)
-    texto = "\n".join(encontrados)
+def _split_lineas(pdf_text: str) -> List[str]:
+    # Conserva líneas, porque en tu PDF las tablas se extraen con saltos.
+    return [ln.strip() for ln in (pdf_text or "").splitlines() if ln.strip()]
+
+
+def _extraer_bloque_alrededor(lineas: List[str], idx: int, before: int = 2, after: int = 10) -> str:
+    """
+    Devuelve un bloque de líneas alrededor de un índice.
+    Para tablas del PDF, suele ser suficiente para capturar “fila completa + encabezados”.
+    """
+    a = max(0, idx - before)
+    b = min(len(lineas), idx + after + 1)
+    return "\n".join(lineas[a:b])
+
+
+def _extraer_bloque_por_codigo(lineas: List[str], codigo: str) -> str:
+    """
+    Si el usuario menciona un código (VA-001, etc.), devolver un bloque completo:
+    desde el código hasta antes del siguiente código (o un límite).
+    """
+    codigo = codigo.upper()
+    # encuentra la línea que contiene el código
+    start = None
+    for i, ln in enumerate(lineas):
+        if codigo in ln.upper():
+            start = i
+            break
+    if start is None:
+        return ""
+
+    # buscar el siguiente código para cortar “ficha”
+    end = min(len(lineas), start + 25)  # límite duro para evitar bloques gigantes
+    for j in range(start + 1, min(len(lineas), start + 25)):
+        if CODE_RE.search(lineas[j]):
+            end = j
+            break
+
+    # incluir un par de líneas antes por si hay encabezado “Inventario en Venta — Lima”
+    a = max(0, start - 2)
+    return "\n".join(lineas[a:end])
+
+
+def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500) -> str:
+    """
+    Recupera evidencia del PDF con enfoque inmobiliario:
+    1) Si hay código (VA-001, etc.) → devuelve bloque por código.
+    2) Si no hay código → rankea líneas por relevancia y devuelve bloques alrededor.
+    """
+
+    if not pdf_text or not pregunta:
+        return ""
+
+    lineas = _split_lineas(pdf_text)
+    pregunta_norm = normalizar_texto(pregunta)
+
+    # 1) Prioridad absoluta: si el usuario menciona código(s), devolvemos esos bloques.
+    codigos = list({c.upper() for c in CODE_RE.findall(pregunta_norm)})
+    if codigos:
+        bloques = []
+        for cod in codigos[:3]:  # limita a 3 para no explotar contexto
+            b = _extraer_bloque_por_codigo(lineas, cod)
+            if b:
+                bloques.append(b)
+        texto = "\n\n---\n\n".join(bloques)
+        return texto[:max_chars] + ("\n...[contenido recortado]..." if len(texto) > max_chars else "")
+
+    # 2) Búsqueda por relevancia (sin código)
+    stopwords = {
+        "que", "como", "donde", "cual", "cuanto", "cuales", "tienes", "tiene",
+        "para", "con", "del", "las", "los", "una", "uno", "unos", "unas",
+        "por", "sobre", "este", "esta", "estos", "estas", "a", "en", "de", "y", "o"
+    }
+
+    palabras_base = [p for p in pregunta_norm.split() if len(p) >= 3 and p not in stopwords]
+    palabras = expandir_sinonimos(palabras_base)
+
+    # señales útiles: números y dinero
+    tiene_precio = bool(re.search(r"\$?\s?\d[\d,\.]*", pregunta_norm))
+    nums = re.findall(r"\d+", pregunta_norm)
+    nums = set(nums)
+
+    resultados: List[Tuple[int, int]] = []  # (score, idx_linea)
+
+    for idx, ln in enumerate(lineas):
+        ln_norm = normalizar_texto(ln)
+
+        score = 0
+
+        # coincidencias de palabras (peso 2)
+        for p in palabras:
+            if p and p in ln_norm:
+                score += 2
+
+        # si la línea contiene un código de inventario, sube su peso
+        if CODE_RE.search(ln):
+            score += 3
+
+        # si el usuario mencionó números (ej: 3 dormitorios, 2 baños), y la línea tiene esos números
+        if nums:
+            for n in nums:
+                if re.search(rf"\b{re.escape(n)}\b", ln_norm):
+                    score += 2
+
+        # si el usuario mencionó precio y la línea tiene $ o “precio/mes”, sube
+        if tiene_precio and ("$" in ln or "precio" in ln_norm):
+            score += 2
+
+        if score > 0:
+            resultados.append((score, idx))
+
+    # ordenar por score y tomar los mejores
+    resultados.sort(key=lambda x: x[0], reverse=True)
+    top = resultados[:12]  # top líneas “semilla”
+
+    # convertir semillas a bloques (evita duplicados por solapamiento)
+    bloques = []
+    usados = set()
+    for score, idx in top:
+        # “firma” simple para no repetir el mismo bloque 10 veces
+        key = max(0, idx - 2)
+        if key in usados:
+            continue
+        usados.add(key)
+
+        bloque = _extraer_bloque_alrededor(lineas, idx, before=2, after=10)
+        bloques.append(bloque)
+
+    texto = "\n\n---\n\n".join(bloques).strip()
+
     if len(texto) > max_chars:
-        texto = texto[:max_chars] + "\n...[recortado]..."
+        texto = texto[:max_chars] + "\n...[contenido recortado]..."
+
     return texto
 
 def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
     t = (texto_usuario or "").strip()
+    if not t:
+        return "¿Podrías escribir tu consulta, por favor?"
 
-    # Saludo natural (sin depender del PDF)
-    if t.lower() in ["hola", "buenas", "buenos dias", "buenas tardes", "buenas noches"]:
-        return "Hola, bienvenido(a) a nuestra inmobiliaria. ¿Deseas comprar, vender o alquilar una propiedad?"
+    # Saludos (sin tocar PDF ni OpenAI)
+    saludos = {"hola", "buenas", "buenos dias", "buenas tardes", "buenas noches"}
+    if t.lower() in saludos:
+        return "Hola, soy tu asesor(a) de Inmobiliaria Horizonte Urbano S.A.C.. ¿Deseas comprar, vender o alquilar una propiedad?"
+
+    # Todo lo demás → catálogo
+    return preguntar_catalogo(t)
+
+
+# =========================
+# Funcion para Preguntar OPENAI con contexto del PDF
+# =========================
+def preguntar_catalogo(pregunta: str) -> str:
+    t = (pregunta or "").strip()
+    if not t:
+        return "¿Podrías escribir tu consulta, por favor?"
+
+    if not client:
+        return "El sistema aún no está configurado (falta OPENAI_API_KEY)."
 
     pdf_text = cargar_texto_pdf()
     if not pdf_text:
@@ -195,20 +374,24 @@ def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
 
     evidencia = buscar_fragmentos(pdf_text, t)
 
-    # Si no hay evidencia → no inventar
+    # Si no hay evidencia → no inventar (y pedir datos)
     if not evidencia.strip():
-        return "Gracias por tu consulta. No encuentro ese dato en el catálogo. ¿En qué ciudad/distrito y qué tipo de inmueble buscas?"
-
-    if not client:
-        return "El sistema de respuestas aún no está configurado (falta OPENAI_API_KEY)."
+        return ("Solo puedo brindar información del catálogo de Inmobiliaria Los Andes. "
+                "No encuentro ese dato en el catálogo. ¿En qué ciudad/distrito y qué tipo de inmueble buscas?")
 
     system = (
-        "Eres un asesor inmobiliario profesional. Responde únicamente usando la evidencia del catálogo. "
-        "No inventes precios, ubicaciones, disponibilidad ni condiciones si no aparecen en la evidencia. "
-        "Si la pregunta está fuera del catálogo, indica que solo brindas información del catálogo y pide datos para ayudar."
+        "Eres un asesor inmobiliario profesional de 'Inmobiliaria Los Andes'. "
+        "Responde ÚNICAMENTE usando la evidencia del catálogo proporcionada. "
+        "No inventes precios, ubicaciones, metrajes, disponibilidad, beneficios ni condiciones si no aparecen en la evidencia. "
+        "Si el usuario pregunta algo fuera del catálogo, responde: "
+        "'Solo puedo brindar información del catálogo de Inmobiliaria Los Andes.' y pide datos (ciudad/distrito, tipo de inmueble, presupuesto)."
     )
 
-    user = f"Pregunta del cliente: {t}\n\nEvidencia del catálogo (PDF):\n{evidencia}"
+    user = (
+        f"Pregunta del cliente: {t}\n\n"
+        f"Evidencia del catálogo (PDF):\n{evidencia}\n\n"
+        "Responde claro, breve y comercial. Si faltan datos clave, pregunta 1-2 cosas máximo."
+    )
 
     resp = client.chat.completions.create(
         model=CHAT_MODEL,
@@ -216,14 +399,47 @@ def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        temperature=0.3
+        temperature=0.2
     )
-    return resp.choices[0].message.content.strip()
 
+    return (resp.choices[0].message.content or "").strip()
 
 # =========================
-# Enviar mensajes WhatsApp
+# Enviar mensajes
 # =========================
+# Enviar mensajes a través de la API de WhatsApp (función placeholder)    
+def enviar_mensajes(texto, numero, agregar_mensaje_log):
+    texto = (texto or "").strip()
+    data = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": numero,
+        "type": "text",
+        "text": {
+            "preview_url": False,
+            "body": texto
+        }
+    }
+    # Convertir el diccionario a JSON y codificar en UTF-8
+    data = json.dumps(data, ensure_ascii=False).encode("utf-8")
+    #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
+    headers = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Bearer EAARxR0W4Q4IBQ4X0S8DfieZCQd2ftnZB4jZAo8cU2pfScGeccjZBEwQ072YfqNfyN9SYKTZB78snbHxpDSZCVQ6qk8rZATBG9ZBhIZCekFZC6CFdzVLPHPvpQfbiCsZAX8nYYYV19HhlhRiMgi7gME0JcIuEAzcZBww84PNA1tnFDkxgJVwltMZBlnvO0DNvzaBB5mC4kZB2d9n6AjvqQ50P8DQnzYqNvZCiZAMfdiDrlAOMQZAcNMo47ZBdk5fZAtgeR7NAcvRaTaVOIrNDiDaTJZCkokcKztj8jW5P'  # Reemplaza con tu token de acceso
+    }
+    connection = http.client.HTTPSConnection('graph.facebook.com')
+    try:
+        connection.request('POST', '/v22.0/1009924102202593/messages', body=data, headers=headers)
+        response = connection.getresponse()
+        print(response.status, response.reason)
+        print(response.read().decode())
+    except Exception as e:
+        agregar_mensaje_log(json.dumps({
+            "error": "Error al enviar mensaje",
+            "detalle": str(e)
+        }, ensure_ascii=False))
+    finally:
+        connection.close()
 
 
 # =========================
