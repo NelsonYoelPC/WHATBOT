@@ -79,7 +79,7 @@ def recibir_mensaje(req):
         # A veces Meta manda eventos sin "messages" (por ejemplo statuses)
         mensaje = value.get("messages", [])
 
-        # ✅ Si NO hay mensajes, no guardamos nada (no es error)
+        #Si NO hay mensajes, no guardamos nada (no es error)
         if not mensaje:
             return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -96,12 +96,7 @@ def recibir_mensaje(req):
             texto = (messages.get("text") or {}).get("body", "")
             numero = messages.get("from", "")
 
-            # Guardar en la BD (como texto)
-            agregar_mensaje_log(json.dumps({
-                "numero": numero,
-                "tipo": tipo,
-                "texto": texto
-            }, ensure_ascii=False))
+            enviar_mensajes(texto, numero)
 
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
