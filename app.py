@@ -123,7 +123,7 @@ def enviar_mensajes(texto, numero):
                 "preview_url": False,
                 "body": "Hola, ¿en qué puedo ayudarte?"
             }
-        }
+        } 
     else:
         data={
             "messaging_product": "whatsapp",
@@ -135,11 +135,11 @@ def enviar_mensajes(texto, numero):
                 "body": "Intente nuevamente, no entendí su mensaje."
             }
         }
-    #Convertir el diccionario a JSON 
-    data= json.dumps(data, ensure_ascii=False)
+    # Convertir el diccionario a JSON y codificar en UTF-8
+    data = json.dumps(data, ensure_ascii=False).encode("utf-8")
     #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
     headers = {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Bearer EAARxR0W4Q4IBQ32ZCnBj95xd4D69gyVTlQgaksKCbR3TPjTHCGgxAZALHN6ZC1HqH4jmHnrIpLIGPWmm87owDjzGSBUZC9YohdSwn9V8eMv4PVYLpi2J2Sya4TVqFiQDQguJ9zyYGM11PDZAPdscvR9eIy3LZA2LjrhlsK8F3eMsUWcGjBqlbFloJtoDRFYWpB6ktQHMaBZCGoKZBaZAfFv0SxlnXpI8mdVqLxzK0LGaqZBvGaK5Bdxh5jADgsWeKZAX70EwxJEKc2OXERuv7heRtmAYZC8I'  # Reemplaza con tu token de acceso
     }
     connection = http.client.HTTPSConnection('graph.facebook.com')
