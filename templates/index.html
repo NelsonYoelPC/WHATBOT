@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro de Mensajes</title>
+  <title>Registro de Logs de Errores</title>
   <style>
     :root{
       --bg:#0b1220;
@@ -12,23 +12,25 @@
       --text:#e8eefc;
       --line: rgba(255,255,255,.08);
       --accent:#5aa7ff;
+      --good:#38d39f;
+      --warn:#ffd166;
+      --bad:#ff5c7a;
       --chip: rgba(90,167,255,.12);
+      --surface: rgba(0,0,0,.18);
     }
     *{ box-sizing:border-box; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% -10%, rgba(90,167,255,.25), transparent 55%),
-                  radial-gradient(900px 500px at 90% 10%, rgba(120,255,214,.12), transparent 60%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(90,167,255,.22), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(120,255,214,.10), transparent 60%),
+        var(--bg);
       color:var(--text);
       min-height:100vh;
       padding:32px 16px;
     }
-    .wrap{
-      max-width: 1050px;
-      margin:0 auto;
-    }
+    .wrap{ max-width: 1150px; margin:0 auto; }
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid var(--line);
@@ -37,35 +39,29 @@
       overflow:hidden;
     }
     .header{
-      padding:24px 24px 12px 24px;
+      padding:22px 22px 12px 22px;
       border-bottom:1px solid var(--line);
       display:flex;
-      gap:16px;
+      gap:14px;
       align-items:flex-start;
       justify-content:space-between;
       flex-wrap:wrap;
     }
-    .title{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    h1{
-      margin:0;
-      font-size: 22px;
-      letter-spacing:.2px;
-    }
+    .title{ display:flex; flex-direction:column; gap:6px; }
+    h1{ margin:0; font-size: 20px; letter-spacing:.2px; }
     .subtitle{
       margin:0;
       color:var(--muted);
-      font-size: 14px;
-      line-height:1.4;
+      font-size: 13px;
+      line-height:1.45;
+      max-width: 760px;
     }
     .controls{
       display:flex;
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
+      justify-content:flex-end;
     }
     .chip{
       padding:8px 10px;
@@ -82,9 +78,9 @@
       gap:10px;
       padding:10px 12px;
       border:1px solid var(--line);
-      background: rgba(0,0,0,.18);
+      background: var(--surface);
       border-radius: 12px;
-      min-width: 280px;
+      min-width: 320px;
     }
     .search input{
       width:100%;
@@ -94,17 +90,18 @@
       color:var(--text);
       font-size:14px;
     }
-    .search input::placeholder{ color: rgba(154,167,189,.8); }
+    .search input::placeholder{ color: rgba(154,167,189,.85); }
+
     .table-wrap{
       padding: 8px 0 0 0;
       overflow:auto;
-      max-height: 70vh;
+      max-height: 72vh;
     }
     table{
       width:100%;
       border-collapse:separate;
       border-spacing:0;
-      min-width: 720px;
+      min-width: 900px;
     }
     thead th{
       position: sticky;
@@ -117,19 +114,19 @@
       text-transform:uppercase;
       letter-spacing:.08em;
       color: var(--muted);
-      padding: 12px 18px;
+      padding: 12px 16px;
       border-bottom:1px solid var(--line);
+      white-space:nowrap;
     }
     tbody td{
-      padding: 14px 18px;
+      padding: 14px 16px;
       border-bottom:1px solid var(--line);
       vertical-align:top;
       font-size: 14px;
       line-height: 1.35;
     }
-    tbody tr:hover td{
-      background: rgba(90,167,255,.06);
-    }
+    tbody tr:hover td{ background: rgba(90,167,255,.06); }
+
     .date{
       color: var(--muted);
       white-space:nowrap;
@@ -139,13 +136,58 @@
       white-space: pre-wrap;
       word-break: break-word;
     }
+
+    /* “Severidad” sin íconos: sólo texto + color */
+    .sev{
+      display:inline-flex;
+      align-items:center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      letter-spacing:.02em;
+      white-space:nowrap;
+    }
+    .sev.info{ color: var(--accent); }
+    .sev.warn{ color: var(--warn); }
+    .sev.error{ color: var(--bad); }
+
+    .origin{
+      color: var(--muted);
+      white-space:nowrap;
+      max-width: 240px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor:pointer;
+      transition: transform .08s ease, background .12s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{ background: rgba(90,167,255,.10); }
+    .btn:active{ transform: scale(.98); }
+
     .empty{
-      padding: 22px 24px;
+      padding: 22px 22px;
       color: var(--muted);
       text-align:center;
     }
     footer{
-      padding: 14px 24px;
+      padding: 12px 22px;
       border-top:1px solid var(--line);
       color: var(--muted);
       font-size: 12px;
@@ -154,13 +196,10 @@
       gap:12px;
       flex-wrap:wrap;
     }
-    a{ color: var(--accent); text-decoration:none; }
-    a:hover{ text-decoration:underline; }
 
-    @media (max-width: 600px){
+    @media (max-width: 700px){
       .search{ min-width: 100%; }
-      .header{ padding:20px 18px 10px 18px; }
-      footer{ padding:12px 18px; }
+      table{ min-width: 820px; }
     }
   </style>
 </head>
@@ -170,35 +209,60 @@
     <div class="card">
       <div class="header">
         <div class="title">
-          <h1>Registro de Mensajes</h1>
-          <p class="subtitle">Panel simple para visualizar los mensajes guardados por WhatBot.</p>
+          <h1>Registro de Logs de Errores</h1>
+          <p class="subtitle">
+            Panel para auditar y revisar errores registrados por la aplicación.
+            Use el filtro para encontrar mensajes por texto, fecha u origen.
+          </p>
         </div>
 
         <div class="controls">
           <span class="chip">Total: {{ logs|length }}</span>
-          <div class="search" title="Filtrar por texto">
-            <span style="color:var(--muted);font-size:14px;">🔎</span>
-            <input id="q" type="text" placeholder="Buscar en mensajes..." autocomplete="off" />
+          <div class="search">
+            <input id="q" type="text" placeholder="Filtrar por texto, fecha u origen..." autocomplete="off" />
           </div>
         </div>
       </div>
 
       <div class="table-wrap">
         {% if logs|length == 0 %}
-          <div class="empty">Aún no hay mensajes registrados.</div>
+          <div class="empty">No existen logs registrados.</div>
         {% else %}
         <table id="tabla">
           <thead>
             <tr>
-              <th style="width:200px;">Fecha y Hora</th>
-              <th>Mensaje</th>
+              <th style="width:200px;">Fecha y hora</th>
+              <th style="width:120px;">Nivel</th>
+              <th style="width:260px;">Origen</th>
+              <th>Detalle</th>
+              <th style="width:120px; text-align:right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {% for log in logs %}
             <tr>
               <td class="date">{{ log.fech_y_hora }}</td>
-              <td class="msg">{{ log.texto }}</td>
+
+              <!-- Si aún no tienes campo nivel, se mostrará como INFO por defecto -->
+              <td>
+                {% set level = (log.nivel if log.nivel is defined else 'INFO') %}
+                <span class="sev {{ 'error' if level|upper in ['ERROR','CRITICAL'] else ('warn' if level|upper in ['WARN','WARNING'] else 'info') }}">
+                  {{ level|upper }}
+                </span>
+              </td>
+
+              <!-- Si aún no tienes campo origen, muestra '-' -->
+              <td class="origin" title="{{ log.origen if log.origen is defined else '-' }}">
+                {{ log.origen if log.origen is defined else '-' }}
+              </td>
+
+              <td class="msg" data-msg="{{ log.texto|e }}">{{ log.texto }}</td>
+
+              <td>
+                <div class="actions">
+                  <button class="btn" type="button" onclick="copyRow(this)">Copiar</button>
+                </div>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -207,14 +271,14 @@
       </div>
 
       <footer>
-        <div>Estado: <span style="color:#b7ffda;">●</span> Activo</div>
-        <div>Tip: escribe “hola” en WhatsApp para probar botones.</div>
+        <div>Estado: Activo</div>
+        <div>Última actualización: {{ now if now is defined else '—' }}</div>
       </footer>
     </div>
   </div>
 
   <script>
-    // Filtro rápido en cliente (sin backend)
+    // Filtro rápido en cliente
     const input = document.getElementById('q');
     const table = document.getElementById('tabla');
 
@@ -227,6 +291,28 @@
           r.style.display = text.includes(q) ? '' : 'none';
         });
       });
+    }
+
+    // Copiar detalle del log
+    async function copyRow(btn) {
+      const tr = btn.closest('tr');
+      const msgCell = tr.querySelector('.msg');
+      const text = msgCell ? msgCell.innerText : '';
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = 'Copiado';
+        setTimeout(() => btn.textContent = 'Copiar', 900);
+      } catch (e) {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = 'Copiado';
+        setTimeout(() => btn.textContent = 'Copiar', 900);
+      }
     }
   </script>
 </body>
