@@ -425,7 +425,7 @@ def enviar_mensajes(texto, numero, agregar_mensaje_log):
     #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
     headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer EAARxR0W4Q4IBQ4X0S8DfieZCQd2ftnZB4jZAo8cU2pfScGeccjZBEwQ072YfqNfyN9SYKTZB78snbHxpDSZCVQ6qk8rZATBG9ZBhIZCekFZC6CFdzVLPHPvpQfbiCsZAX8nYYYV19HhlhRiMgi7gME0JcIuEAzcZBww84PNA1tnFDkxgJVwltMZBlnvO0DNvzaBB5mC4kZB2d9n6AjvqQ50P8DQnzYqNvZCiZAMfdiDrlAOMQZAcNMo47ZBdk5fZAtgeR7NAcvRaTaVOIrNDiDaTJZCkokcKztj8jW5P'  # Reemplaza con tu token de acceso
+        'Authorization': 'Bearer EAARxR0W4Q4IBQ2AfIZAv01cd6x855ixNcE0Hb09VqZASujFeVzWGAkhs3H4cMZBE9XVrbZA51w9IyaJHOIwal6jzsJOtOl5NTuVdYF5NDrQmqd4dBJAgBiQABqEAkZBgBCt5lZAaYf8iAwlZCOe8cG3ctfKxB5eXItCTEFbChJZBTNSZCpH71fcoS9ygeYVd22ZC0ezTiJkfUPZBsz0IQCtTXV1JBjzJeHa2qzGvx8gMB1ZAjAW86tq6f3NLelEAAAnVKNr7NusKgXJNWXOX2CV7rKH5AFFZA'  # Reemplaza con tu token de acceso
     }
     connection = http.client.HTTPSConnection('graph.facebook.com')
     try:
