@@ -38,7 +38,7 @@ def agregar_mensaje_log(texto):
     db.session.commit()
 
 #TOKEN DE VERIFICACION DE WHATBOT, REEMPLAZA 'tu_token_aqui' CON EL TOKEN REAL    
-TOKEN_WHATBOT = 'tu_token_aqui'
+TOKEN_WHATBOT = 'WHATBOTTOKEN'
 @app.route('/webhook', methods=['GET','POST'])
 def webhook():
     if request.method == 'GET':
