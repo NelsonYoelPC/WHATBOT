@@ -7,7 +7,7 @@ import http.client
 import os
 from pypdf import PdfReader
 from openai import OpenAI
-
+from whatsapp_service import enviar_mensajes
 app = Flask(__name__)
 
 # =========================
@@ -120,8 +120,8 @@ def recibir_mensaje(req):
                 "texto": texto
             }, ensure_ascii=False))
 
-            respuesta = generar_respuesta_desde_pdf(texto)
-            enviar_mensajes(respuesta, numero)
+            ##respuesta = generar_respuesta_desde_pdf(texto)
+            enviar_mensajes(texto, numero, agregar_mensaje_log)
 
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -182,7 +182,6 @@ def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500):
         texto = texto[:max_chars] + "\n...[recortado]..."
     return texto
 
-
 def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
     t = (texto_usuario or "").strip()
 
@@ -225,41 +224,6 @@ def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
 # =========================
 # Enviar mensajes WhatsApp
 # =========================
-def enviar_mensajes(texto, numero):
-    texto = texto.lower()
-    data = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": numero,
-        "type": "text",
-        "text": {
-            "preview_url": False,
-            "body": texto
-        }
-    }
-
-    # Convertir el diccionario a JSON y codificar en UTF-8
-    data = json.dumps(data, ensure_ascii=False).encode("utf-8")
-
-    # Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
-    headers = {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer EAARxR0W4Q4IBQzirE3XmNuZAOoszfOhZB8gpiMZBWRtbgLZA0UZBZBYwvrNewzn87197kZCA6xRnsctkans2idzocdekf2UL02z5QN0MbDqZCNWczaSUUnNIgdqWgfSUkJTprlYqwmLP1RKpcwZAEt4gPPwcyxJmKyBQrwIsvsY6PgLAf6Lu2SU2rykh5GBaMCNAcYcFMaS7kFZBvNY65dTeC220F8FkqC3uqheXvK09LpH3ZAQV1tZBPc17hG6ZCLwBBJYkCMWt0QRZCTn29WbcZBROWQQhmi3'
-    }
-
-    connection = http.client.HTTPSConnection('graph.facebook.com')
-    try:
-        connection.request('POST', '/v22.0/1009924102202593/messages', body=data, headers=headers)
-        response = connection.getresponse()
-        print(response.status, response.reason)
-        print(response.read().decode())
-    except Exception as e:
-        agregar_mensaje_log(json.dumps({
-            "error": "Error al enviar mensaje",
-            "detalle": str(e)
-        }, ensure_ascii=False))
-    finally:
-        connection.close()
 
 
 # =========================
