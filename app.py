@@ -4,6 +4,10 @@ from datetime import datetime
 import json
 import traceback
 import http.client
+import os
+from pypdf import PdfReader
+from openai import OpenAI
+
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///whatbot.db'
@@ -79,7 +83,7 @@ def recibir_mensaje(req):
         # A veces Meta manda eventos sin "messages" (por ejemplo statuses)
         mensaje = value.get("messages", [])
 
-        # ✅ Si NO hay mensajes, no guardamos nada (no es error)
+        # Si NO hay mensajes, no guardamos nada (no es error)
         if not mensaje:
             return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
@@ -103,38 +107,109 @@ def recibir_mensaje(req):
                 "texto": texto
             }, ensure_ascii=False))
             # Enviar respuesta (función placeholder)
-            enviar_mensajes(texto, numero)
+            respuesta = generar_respuesta_desde_pdf(texto)
+            enviar_mensajes(respuesta, numero)
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
     except Exception as e:
         detalle = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
         agregar_mensaje_log(detalle)
         return jsonify({'error': 'Internal Server Error'}), 500
+
+ ##enviar mensajes a través de la API de WhatsApp (función placeholder)
+
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+PDF_PATH = os.environ.get("PDF_PATH", "Docs/catalogo_inmobiliario.pdf")
+CHAT_MODEL = os.environ.get("CHAT_MODEL", "gpt-4o-mini")
+
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+_pdf_text_cache = None
+
+def cargar_texto_pdf():
+    global _pdf_text_cache
+    if _pdf_text_cache is not None:
+        return _pdf_text_cache
+
+    reader = PdfReader(PDF_PATH)
+    parts = []
+    for i, page in enumerate(reader.pages):
+        t = (page.extract_text() or "").strip()
+        if t:
+            parts.append(f"[Página {i+1}]\n{t}")
+    _pdf_text_cache = "\n\n".join(parts)
+    return _pdf_text_cache
+
+def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500):
+    """
+    Búsqueda simple: toma palabras clave y recupera líneas que las contengan.
+    """
+    q = (pregunta or "").lower()
+    palabras = [p for p in q.replace("¿"," ").replace("?"," ").split() if len(p) >= 4]
+
+    lineas = [ln.strip() for ln in pdf_text.splitlines() if ln.strip()]
+    encontrados = []
+
+    for ln in lineas:
+        lnl = ln.lower()
+        if any(p in lnl for p in palabras):
+            encontrados.append(ln)
+
+    # Reduce tamaño (para no pasar demasiado al modelo)
+    texto = "\n".join(encontrados)
+    if len(texto) > max_chars:
+        texto = texto[:max_chars] + "\n...[recortado]..."
+    return texto
+
+def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
+    t = (texto_usuario or "").strip()
+
+    # Saludo natural (sin depender del PDF)
+    if t.lower() in ["hola", "buenas", "buenos dias", "buenas tardes", "buenas noches"]:
+        return "Hola, bienvenido(a) a nuestra inmobiliaria. ¿Deseas comprar, vender o alquilar una propiedad?"
+
+    pdf_text = cargar_texto_pdf()
+    if not pdf_text:
+        return "No pude leer el catálogo en este momento. Intenta nuevamente en unos minutos."
+
+    evidencia = buscar_fragmentos(pdf_text, t)
+
+    # Si no hay evidencia → no inventar
+    if not evidencia.strip():
+        return "Gracias por tu consulta. No encuentro ese dato en el catálogo. ¿En qué ciudad/distrito y qué tipo de inmueble buscas?"
+
+    if not client:
+        return "El sistema de respuestas aún no está configurado (falta OPENAI_API_KEY)."
+
+    system = (
+        "Eres un asesor inmobiliario profesional. Responde únicamente usando la evidencia del catálogo. "
+        "No inventes precios, ubicaciones, disponibilidad ni condiciones si no aparecen en la evidencia. "
+        "Si la pregunta está fuera del catálogo, indica que solo brindas información del catálogo y pide datos para ayudar."
+    )
+
+    user = f"Pregunta del cliente: {t}\n\nEvidencia del catálogo (PDF):\n{evidencia}"
+
+    resp = client.chat.completions.create(
+        model=CHAT_MODEL,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        temperature=0.3
+    )
+    return resp.choices[0].message.content.strip()
 #Enviar mensajes a través de la API de WhatsApp (función placeholder)    
 def enviar_mensajes(texto, numero):
     texto=texto.lower()
-    if "hola" in texto:
-        data={
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": numero    ,
-            "type": "text",
-            "text": {
-                "preview_url": False,
-                "body": "Hola, ¿en qué puedo ayudarte?"
-            }
-        } 
-    else:
-        data={
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": numero    ,
-            "type": "text",
-            "text": {
-                "preview_url": False,
-                "body": "Intente nuevamente, no entendí su mensaje."
-            }
+    data = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": numero,
+        "type": "text",
+        "text": {
+            "preview_url": False,
+            "body": texto
         }
+    }
     # Convertir el diccionario a JSON y codificar en UTF-8
     data = json.dumps(data, ensure_ascii=False).encode("utf-8")
     #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
