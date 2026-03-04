@@ -437,7 +437,7 @@ def preguntar_catalogo(pregunta: str) -> str:
 # =========================
 # Enviar mensajes
 # =========================  
-TOKEN = os.getenv("WHATSAPP_TOKEN") 
+#TOKEN = os.getenv("WHATSAPP_TOKEN") 
 def enviar_mensajes(texto, numero, agregar_mensaje_log):
     texto = (texto or "").strip()
     data = {
@@ -455,7 +455,7 @@ def enviar_mensajes(texto, numero, agregar_mensaje_log):
     #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
     headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer {TOKEN}'  # Reemplaza con tu token de acceso
+        'Authorization': f'Bearer EAARxR0W4Q4IBQx3hTC3SPwrUZApSEYdisIR8pjCwCRSECBrz2mohYvP5g0mPltYbJt6ulFpZB7JWj1rFck9o2IsYfCeYRUd1jLgTDQ9uotQ05qOZCfcSlyZBeUCazRU4IJqMj5TOL8RzjeLSZCU3usC9IT9S8DZBVxVcbdZCc1jBcIHQquy3TzhWTc1ve5vs2ZCnN9UpwPYDSP5aAURWg2ItiCgY6J0EmZCSKETNOnEpM'
     }
     connection = http.client.HTTPSConnection('graph.facebook.com')
     try:
