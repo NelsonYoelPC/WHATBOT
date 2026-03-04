@@ -392,7 +392,9 @@ def preguntar_catalogo(pregunta: str) -> str:
         f"Evidencia del catálogo (PDF):\n{evidencia}\n\n"
         "Responde claro, breve y comercial. Si faltan datos clave, pregunta 1-2 cosas máximo."
     )
-    print("LLAMANDO A OPENAI...")
+    print("OPENAI CALL")
+    print("Pregunta:", t)
+    print("Evidencia encontrada:", evidencia[:200])
     resp = client.chat.completions.create(
         model=CHAT_MODEL,
         messages=[
