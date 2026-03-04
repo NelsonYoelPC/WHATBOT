@@ -27,36 +27,41 @@ db = SQLAlchemy(app)
 # =========================
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fech_y_hora = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    numero = db.Column(db.String(20))  # numero de whatsapp
+    tipo = db.Column(db.String(20))    # usuario / bot
     texto = db.Column(db.Text, nullable=False)
-
+    fech_y_hora = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 # Crear la tabla si no existe
 with app.app_context():
     db.create_all()
-
-
-# Función para ordenar los registros de la tabla log por fecha y hora de forma descendente
+# =========================
+# Funcion orderna los logs por fecha y hora
+# =========================
 def obtener_logs_ordenados():
     return Log.query.order_by(Log.fech_y_hora.desc()).all()
-
 
 @app.route('/')
 def index():
     logs = obtener_logs_ordenados()
     return render_template('index.html', logs=logs)
+# =========================
+# Funcion para agregar mensajes al log
+# =========================
+def agregar_mensaje_log(data):
 
+    # Si viene como string lo convertimos a dict
+    if isinstance(data, str):
+        data = json.loads(data)
 
-# Función para agregar un nuevo mensaje y guardarlo en la base de datos
-def agregar_mensaje_log(texto):
-    # Asegura que lo que guardas en texto sea string
-    if not isinstance(texto, str):
-        texto = json.dumps(texto, ensure_ascii=False)
+    nuevo_log = Log(
+        numero=data.get("numero"),
+        tipo=data.get("tipo"),
+        texto=data.get("texto")
+    )
 
-    nuevo_log = Log(texto=texto)
     db.session.add(nuevo_log)
     db.session.commit()
-
 
 # =========================
 # Webhook WhatsApp (Meta)
@@ -87,7 +92,9 @@ def verificar_token(req):
         "token_recibido": token
     })
     return jsonify({'error': 'Token de verificacion no válido'}), 403
-
+# =========================
+# Funcion para recibir mensajes de WhatsApp (Meta)
+# =========================
 def recibir_mensaje(req):
     try:
         data = req.get_json(silent=True)
@@ -117,15 +124,30 @@ def recibir_mensaje(req):
             texto = (messages.get("text") or {}).get("body", "")
             numero = messages.get("from", "")
 
+            #agregar_mensaje_log(json.dumps({
+            #    "numero": numero,
+            #    "tipo": tipo,
+            #    "texto": texto
+            #}, ensure_ascii=False))
+            # 1) Guardas lo que te escribió el usuario
             agregar_mensaje_log(json.dumps({
                 "numero": numero,
-                "tipo": tipo,
+                "tipo": "usuario",
                 "texto": texto
+            }, ensure_ascii=False))            
+            # 2) Generas respuesta
+            respuesta = generar_respuesta_desde_pdf(texto)
+            # 3) Guardas lo que responderá el bot
+            agregar_mensaje_log(json.dumps({
+                "numero": numero,
+                "tipo": "bot",
+                "texto": respuesta
             }, ensure_ascii=False))
-
-            respuesta = generar_respuesta_desde_pdf(texto)            
+            # 4) Envías
             enviar_mensajes(respuesta, numero, agregar_mensaje_log)
-
+            #respuesta = generar_respuesta_desde_pdf(texto)            
+            #enviar_mensajes(respuesta, numero, agregar_mensaje_log)
+            
         return jsonify({'message': 'EVENT_RECEIVED'}), 200
 
     except Exception as e:
@@ -143,7 +165,9 @@ CHAT_MODEL = os.environ.get("CHAT_MODEL", "gpt-4o-mini")
 
 client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 _pdf_text_cache = None
-
+# =========================
+# Funcion cargar el PDF
+# =========================
 def cargar_texto_pdf():
     global _pdf_text_cache
     if _pdf_text_cache is not None:
@@ -250,7 +274,9 @@ def _extraer_bloque_por_codigo(lineas: List[str], codigo: str) -> str:
     a = max(0, start - 2)
     return "\n".join(lineas[a:end])
 
-
+# =========================
+# Funcion palabras en el PDF
+# =========================
 def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500) -> str:
     """
     Recupera evidencia del PDF con enfoque inmobiliario:
@@ -342,7 +368,9 @@ def buscar_fragmentos(pdf_text: str, pregunta: str, max_chars: int = 3500) -> st
         texto = texto[:max_chars] + "\n...[contenido recortado]..."
 
     return texto
-
+# =========================
+# Funcion para respuesta del PDF
+# =========================
 def generar_respuesta_desde_pdf(texto_usuario: str) -> str:
     t = (texto_usuario or "").strip()
     if not t:
@@ -408,8 +436,7 @@ def preguntar_catalogo(pregunta: str) -> str:
 
 # =========================
 # Enviar mensajes
-# =========================
-# Enviar mensajes a través de la API de WhatsApp (función placeholder)    
+# =========================   
 def enviar_mensajes(texto, numero, agregar_mensaje_log):
     texto = (texto or "").strip()
     data = {
@@ -427,7 +454,7 @@ def enviar_mensajes(texto, numero, agregar_mensaje_log):
     #Aquí iría la lógica para enviar el mensaje a través de la API de WhatsApp
     headers = {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': 'Bearer EAARxR0W4Q4IBQxZAI6X8HSfN2lmFHYzMronFJaZC1h3AxWQPs0IcKM9EyGkxzCRZCCf62OAIxNNqG0iCXms2YplZAPtVpGN0Y60Q2H8y6HEDdSREdxeLzEqovsQ2HWGShOLsegPWzTMvtgZAmmMqHHjcmZC14vR7CNsoKGW3pRR7F2g2df5ig7gILzHOCtfYMaGkoC3l8oeK3IogQatG1Rslug8dQ2uV3QWwSaNiOZBxbIJKW6jCkShsLguknMmZBQa0DdReyVrp8R9utDu3yu7YU26ZAUDwZD'  # Reemplaza con tu token de acceso
+        'Authorization': 'Bearer EAARxR0W4Q4IBQ1I0Uo4QnUAMYTQxbir7uL3nUByZCcJHW4NjwpuGjXjf69jr6MSLQRfDHt8qAtmL2YqGIWQbSeDv75h4TTTUCtVAN89as7Yb0ts7n8yZCLADVpa90E3ZAZCjkDBZBZCVbJ6krEJwVOFa9qeU4NcIRTMBlWQaLetGcVJMb5t6DuheQjTaVUTmgTOiRrYzOjDqutZBl8cGpG1sqPszWY2O9n0xOX7iHcaBKtEOuYgV9yLPEW1xy53HiYuGWPH6ARNbvWc53ggQ6CIZBZAOm'  # Reemplaza con tu token de acceso
     }
     connection = http.client.HTTPSConnection('graph.facebook.com')
     try:
@@ -442,7 +469,6 @@ def enviar_mensajes(texto, numero, agregar_mensaje_log):
         }, ensure_ascii=False))
     finally:
         connection.close()
-
 
 # =========================
 # Run
