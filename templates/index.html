@@ -251,10 +251,8 @@
                 </span>
               </td>
 
-              <!-- Si aún no tienes campo origen, muestra '-' -->
-              <td class="origin" title="{{ log.origen if log.origen is defined else '-' }}">
-                {{ log.origen if log.origen is defined else '-' }}
-              </td>
+              <!-- ya se tiene el origen y esta en la columna tipo-->
+              <td class="origen" title="{{ log.tipo }}">{{ log.tipo }}</td>
 
               <td class="msg" data-msg="{{ log.texto|e }}">{{ log.texto }}</td>
 
