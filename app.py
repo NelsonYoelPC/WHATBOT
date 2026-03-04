@@ -376,15 +376,15 @@ def preguntar_catalogo(pregunta: str) -> str:
 
     # Si no hay evidencia → no inventar (y pedir datos)
     if not evidencia.strip():
-        return ("Solo puedo brindar información del catálogo de Inmobiliaria Los Andes. "
+        return ("Solo puedo brindar información del catálogo de Inmobiliaria Horizonte Urbano S.A.C. "
                 "No encuentro ese dato en el catálogo. ¿En qué ciudad/distrito y qué tipo de inmueble buscas?")
 
     system = (
-        "Eres un asesor inmobiliario profesional de 'Inmobiliaria Los Andes'. "
+        "Eres un asesor inmobiliario profesional de 'Inmobiliaria Horizonte Urbano S.A.C'. "
         "Responde ÚNICAMENTE usando la evidencia del catálogo proporcionada. "
         "No inventes precios, ubicaciones, metrajes, disponibilidad, beneficios ni condiciones si no aparecen en la evidencia. "
         "Si el usuario pregunta algo fuera del catálogo, responde: "
-        "'Solo puedo brindar información del catálogo de Inmobiliaria Los Andes.' y pide datos (ciudad/distrito, tipo de inmueble, presupuesto)."
+        "'Solo puedo brindar información del catálogo de Inmobiliaria Horizonte Urbano S.A.C.' y pide datos (ciudad/distrito, tipo de inmueble, presupuesto)."
     )
 
     user = (
@@ -392,7 +392,7 @@ def preguntar_catalogo(pregunta: str) -> str:
         f"Evidencia del catálogo (PDF):\n{evidencia}\n\n"
         "Responde claro, breve y comercial. Si faltan datos clave, pregunta 1-2 cosas máximo."
     )
-
+    print("LLAMANDO A OPENAI...")
     resp = client.chat.completions.create(
         model=CHAT_MODEL,
         messages=[
