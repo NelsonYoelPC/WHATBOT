@@ -1,7 +1,10 @@
 import json
 import http.client
+import os
+from app.infraestructure.log_repository import agregar_mensaje_log
 
-
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
+WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
 def enviar_mensajes(texto, numero, agregar_mensaje_log):
     texto = texto.strip().lower()
     if "hola" in texto:
